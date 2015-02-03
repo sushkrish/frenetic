@@ -3,7 +3,7 @@
 version = "3.2.0"
 description = "The Frenetic Compiler and Runtime System"
 requires =
-"core fieldslib fieldslib.syntax openflow sexplib sexplib.syntax str threads yojson ipaddr base64"
+"core fieldslib fieldslib.syntax openflow ocamlgraph sexplib sexplib.syntax str threads yojson ipaddr base64"
 archive(byte) = "netkat.cma"
 archive(byte, plugin) = "netkat.cma"
 archive(native) = "netkat.cmxa"

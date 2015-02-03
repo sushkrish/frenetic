@@ -30,10 +30,12 @@ let switches_of_policy (p:policy) =
        collect' a
     | Mod _ ->
        []
-    | Union(q,r) | Seq (q,r) ->
+    | Union (q,r) | Seq (q,r) ->
        collect q @ collect r
     | Star q ->
        collect q
     | Link(sw1,_,sw2,_) ->
-       [sw1;sw2] in
+       [sw1;sw2]
+    | VLink _ ->
+       [] in
   List.to_list (List.dedup (collect p))
