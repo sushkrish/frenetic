@@ -346,13 +346,14 @@ module Make (MakeUpdate : functor (Args : CONSISTENT_UPDATE_ARGS) -> UPDATE) = s
 
         let old = t.repr in
         let cache = `Preserve old in
-        t.repr   <- LC.compile ~cache (Queue.get q (len - 1));
-
-        if LC.equal old t.repr then begin
-          Log.debug ~tags "[policy] Skipping identical policy update";
-          return ()
-        end else
-          implement_policy ~old t.repr
+        In_thread.run (fun () -> LC.compile ~cache (Queue.get q (len - 1))) >>=
+        (fun result -> 
+           t.repr   <- result;
+           if LC.equal old t.repr then begin
+             Log.debug ~tags "[policy] Skipping identical policy update";
+             return ()
+           end else
+             implement_policy ~old t.repr)
       in
 
       (* This is the main event handler for the controller. First it sends
