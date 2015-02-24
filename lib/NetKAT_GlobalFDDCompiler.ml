@@ -54,6 +54,11 @@ module Pol = struct
 
   let filter_loc sw pt = match_loc sw pt |> mk_filter
 
+  let set_loc sw pt =
+    let m1 = Mod (Switch sw) in
+    let m2 = Mod (Location (Physical pt)) in
+    mk_seq m1 m2
+
   let rec of_pol (ing : NetKAT_Types.pred option) (pol : NetKAT_Types.policy) : policy =
     match pol with
     | NetKAT_Types.Filter a -> Filter a
@@ -62,13 +67,10 @@ module Pol = struct
     | NetKAT_Types.Seq (p,q) -> Seq (of_pol ing p, of_pol ing q)
     | NetKAT_Types.Star p -> Star (of_pol ing p)
     | NetKAT_Types.Link (s1,p1,s2,p2) ->
-      (* SJS: This is not the true sematnics of a link! This is a hack that works for now,
-         but we will need to use the correct encoding once we start doing things like global
-         optimization or deciding equivalence. *)
       let post_link = match ing with
         | None -> filter_loc s2 p2
         | Some ing -> Optimize.mk_and (Test (Switch s2)) (Optimize.mk_not ing) |> mk_filter in
-      mk_big_seq [filter_loc s1 p1; Dup; post_link ]
+      mk_big_seq [filter_loc s1 p1; Dup; set_loc s2 p2; Dup; post_link ]
 
 end
 
@@ -214,6 +216,13 @@ module FDKG = struct
     let continuations = U.create () ~size:10 in
     let rootId = 0 in
     { trees; continuations; rootId; nextId = rootId+1 }
+
+  let copy_t (t : t) : t =
+    let trees = T.copy t.trees in
+    let continuations = U.copy t.continuations in
+    let rootId = t.rootId in
+    let nextId = t.nextId in
+    { trees; continuations; rootId; nextId }
 
   let mk_id_t0 (forest : t0) =
     let id = forest.nextId in
@@ -398,7 +407,25 @@ module FDKG = struct
       (fun (f,_) l r -> l && r && f<>pc)
       fdd
 
+  let is_link (e, d) =
+    FDK.fold
+      (fun par -> ActionK.Par.exists par ~f:(fun seq -> ActionK.Seq.(mem seq (F Switch))))
+      (fun _ l r -> l || r)
+      d
+
+  let the_k (e, d) =
+    match FDK.conts d with
+    | [k] -> k
+    | _ -> assert false
+
+  let remove_topo (forest : t) : unit =
+    map_reachable forest ~order:`Post ~f:(fun _ fdks ->
+      if not (is_link fdks) then fdks
+      else T.find_exn forest.trees (the_k fdks))
+
   let to_local (pc : Field.t) (forest : t) : NetKAT_LocalCompiler.t =
+    let forest = copy_t forest in
+    remove_topo forest;
     let fdk_to_fdd =
       FDK.fold
         (fun par -> ActionK.to_action (fun v -> (pc,v)) par |> NetKAT_FDD.T.mk_leaf)
@@ -459,7 +486,10 @@ module FDKG = struct
     let rec fdk_loop fdkId =
       let fdk = T.find_exn trees fdkId in
       let conts = FDK.conts fdk in
-      fdks := fdk :: (!fdks);
+      begin match FDK.unget fdk with
+      | FDK.Leaf _ -> ()
+      | FDK.Branch _ -> fdks := fdk :: (!fdks)
+      end;
       node_loop fdk;
       List.iter conts ~f:fdk_loop
     in

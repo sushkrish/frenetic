@@ -594,8 +594,25 @@ module Action = struct
   let size =
     Par.fold ~init:0 ~f:(fun acc seq -> acc + (Seq.length seq))
 
+  let rec join ~sep xs =
+    match xs with
+    | [] -> ""
+    | [x] -> x
+    | x::xs -> x ^ sep ^ (join ~sep xs)
+
   let to_string t =
-    Printf.sprintf "[%s]" (SDN.string_of_par (to_sdn t))
+    let of_mod (f,v) = (Field.to_string f) ^ ":=" ^ (Value.to_string v) in
+    let of_seq seq =
+      Seq.to_alist seq
+      |> List.map ~f:of_mod
+      |> join ~sep:"; "
+    in
+    let of_par par =
+      Par.to_list par
+      |> List.map ~f:of_seq
+      |> join ~sep:" + "
+    in
+    of_par t
 end
 
 (* Packet actions with continuations *)
