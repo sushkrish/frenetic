@@ -67,6 +67,9 @@ module Virtual = struct
                                   ptopo_file               ping_file peg_file =
     let fmt = Format.formatter_of_out_channel stderr in
     let () = Format.pp_set_margin fmt 120 in
+    let () = NetKAT_FDD.Field.set_order
+             [ Switch; Location; VSwitch; VPort; IP4Dst; Vlan; TCPSrcPort; TCPDstPort; IP4Src;
+                EthType; EthDst; EthSrc; VlanPcp; IPProto ] in
     let vpolicy =
       Core.Std.In_channel.with_file vpolicy_file ~f:(fun chan ->
         NetKAT_Parser.program NetKAT_Lexer.token (Lexing.from_channel chan)) in
@@ -96,9 +99,10 @@ module Virtual = struct
         NetKAT_Parser.pred_program NetKAT_Lexer.token (Lexing.from_channel chan)) in
     let global_physical_pol =
       NetKAT_VirtualCompiler.compile vpolicy vrel vtopo ving_pol ving veg ptopo ping peg in
-    let compiled_physical_pol =
-      NetKAT_GlobalFDDCompiler.compile
+    let fdk =
+      NetKAT_GlobalFDDCompiler.of_policy ~dedup:true ~ing:ping ~remove_duplicates:true
         Optimize.(mk_big_seq [mk_filter ping; global_physical_pol; mk_filter peg]) in
+    let compiled_physical_pol = NetKAT_GlobalFDDCompiler.to_local NetKAT_FDD.Field.Vlan fdk in
     let print_table (sw, t) =
       Format.fprintf fmt "@[%s@]@\n@\n"
         (SDN_Types.string_of_flowTable ~label:(Int64.to_string sw) t) in
