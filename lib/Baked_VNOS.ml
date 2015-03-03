@@ -56,11 +56,13 @@ let () =
     ((vswitch=4 and vport=1) and (switch=4 and port=6))";
   T.add_exn tbl ~key:"vno2-vinout" ~data:"
     (vswitch=1 and vport=1) or
-    (vswitch=1 and vport=2) or
-    (vswitch=1 and vport=3)";
+    (vswitch=2 and vport=1) or
+    (vswitch=3 and vport=1) or
+    (vswitch=4 and vport=1)";
   T.add_exn tbl ~key:"vno2-vingpol" ~data:"
-    vswitch:=1;
-    if switch=1 and port=3 then vport:=1 
-    else if switch=2 and port=5 then vport:=2
-    else if switch=4 and port=5 then vport:=3
+    vport:=1;
+    if switch=1 and port=3 then vswitch:=1
+    else if switch=2 and port=6 then vswitch:=2
+    else if switch=3 and port=4 then vswitch:=3
+    else if switch=4 and port=6 then vswitch:=4
     else drop";
