@@ -43,7 +43,8 @@ module Global = struct
     let global_pol = mk_big_seq [mk_filter ingress; global_pol; mk_filter egress] in
     let fdks = NetKAT_GlobalFDDCompiler.of_policy global_pol ~dedup:false in
     let fdks_deduped = NetKAT_GlobalFDDCompiler.of_policy global_pol ~dedup:true in
-    let fdd = NetKAT_GlobalFDDCompiler.to_local NetKAT_FDD.Field.Vlan fdks_deduped in
+    let fdd =
+      NetKAT_GlobalFDDCompiler.to_local NetKAT_FDD.Field.Vlan (NetKAT_FDD.Value.of_int 0xffff) fdks_deduped in
     let switches =
       NetKAT_Misc.switches_of_policy (Optimize.mk_seq (NetKAT_Types.Filter ingress) global_pol) in
     let tables =
@@ -102,7 +103,8 @@ module Virtual = struct
     let fdk =
       NetKAT_GlobalFDDCompiler.of_policy ~dedup:true ~ing:ping ~remove_duplicates:true
         Optimize.(mk_big_seq [mk_filter ping; global_physical_pol; mk_filter peg]) in
-    let compiled_physical_pol = NetKAT_GlobalFDDCompiler.to_local NetKAT_FDD.Field.Vlan fdk in
+    let compiled_physical_pol =
+      NetKAT_GlobalFDDCompiler.to_local NetKAT_FDD.Field.Vlan (NetKAT_FDD.Value.of_int 0xffff) fdk in
     let print_table (sw, t) =
       Format.fprintf fmt "@[%s@]@\n@\n"
         (SDN_Types.string_of_flowTable ~label:(Int64.to_string sw) t) in
