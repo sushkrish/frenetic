@@ -4,40 +4,8 @@ open Cohttp_async
 open NetKAT_Types
 module Server = Cohttp_async.Server
 open Common
-open Baked_VNOS
 
 let policy = ref NetKAT_Types.drop
-let vno_pols = Array.of_list [NetKAT_Types.drop; NetKAT_Types.drop]
-
-
-let vno_pol () =
-  let pinout = get_pred "pinout" in
-  let vno1 = NetKAT_VirtualCompiler.compile
-    (Array.get vno_pols 0)
-    (get_pred "vno1-vrel")
-    (get_pol "vno1-topo")
-    (get_pol "vno1-vingpol")
-    (get_pred "vno1-vinout")
-    (get_pred "vno1-vinout")
-    (get_pol "ptopo")
-    pinout
-    pinout in
-  let vno2 = NetKAT_VirtualCompiler.compile
-    (Array.get vno_pols 1)
-    (get_pred "vno2-vrel")
-    (get_pol "vno2-topo")
-    (get_pol "vno2-vingpol")
-    (get_pred "vno2-vinout")
-    (get_pred "vno2-vinout")
-    (get_pol "ptopo")
-    pinout
-    pinout in
-  let global =
-    NetKAT_GlobalFDDCompiler.of_policy ~dedup:true ~ing:pinout ~remove_duplicates:true
-      (Optimize.mk_union vno1 vno2)
-  in
-    NetKAT_GlobalFDDCompiler.to_local NetKAT_FDD.Field.Vlan (NetKAT_FDD.Value.of_int 0xffff) global
-
 
 let handle_request
   ~(body : Cohttp_async.Body.t)
@@ -67,22 +35,9 @@ let handle_request
         (fun p ->
            policy := p;
            Cohttp_async.Server.respond `OK)
-    | `POST, ["update_vno"; vnoId] ->
-      printf "POST /update_vno %s" vnoId;
-      let vnoId = Int.of_string vnoId in
-      handle_parse_errors body parse_update_json (fun p ->
-        Array.set vno_pols vnoId p;
-        Cohttp_async.Server.respond `OK)
     | `GET, [switchId; "flow_table"] ->
        let sw = Int64.of_string switchId in
        NetKAT_LocalCompiler.compile !policy |>
-         NetKAT_LocalCompiler.to_table sw |>
-         NetKAT_SDN_Json.flowTable_to_json |>
-         Yojson.Basic.to_string ~std:true |>
-         Cohttp_async.Server.respond_with_string
-    | `GET, [switchId; "vno_flow_table"] ->
-       let sw = Int64.of_string switchId in
-       vno_pol() |>
          NetKAT_LocalCompiler.to_table sw |>
          NetKAT_SDN_Json.flowTable_to_json |>
          Yojson.Basic.to_string ~std:true |>

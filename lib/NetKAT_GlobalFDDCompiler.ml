@@ -398,14 +398,13 @@ module NetKAT_Automaton = struct
       (fun (f,_) l r -> l && r && f<>pc)
       fdd
 
-  let to_local (pc : Field.t) (egress_pc : Value.t) (automaton : t) : NetKAT_LocalCompiler.t =
+  let to_local (pc : Field.t) (automaton : t) : NetKAT_LocalCompiler.t =
     let fdk_to_fdd =
       FDK.fold
         (fun par -> ActionK.to_action (fun v -> (pc,v)) par |> NetKAT_FDD.T.mk_leaf)
         (* SJS: using mk_branch here is safe since variable order of fdk and fdd agree *)
         (fun v t f -> NetKAT_FDD.T.mk_branch v t f)
     in
-    let pop_pc = NetKAT_FDD.T.const Action.(Par.singleton (Seq.singleton pc egress_pc)) in
     fold_reachable automaton ~init:(NetKAT_FDD.T.mk_drop ()) ~f:(fun acc id (e,d) ->
       let _ = assert (pc_unused pc e && pc_unused pc d) in
       let guard =
@@ -414,7 +413,6 @@ module NetKAT_Automaton = struct
       let fdk = FDK.seq guard (FDK.union e d) in
       let fdd = fdk_to_fdd fdk in
       NetKAT_LocalCompiler.union acc fdd)
-      |> NetKAT_LocalCompiler.seq pop_pc
 
 
   (* SJS: horrible hack *)
@@ -478,4 +476,4 @@ end
 include NetKAT_Automaton
 
 let compile (pol : NetKAT_Types.policy) : NetKAT_LocalCompiler.t =
-  to_local Field.Vlan (Value.of_int 0xffff) (of_policy ~dedup:true pol)
+  to_local Field.Vlan (of_policy ~dedup:true pol)
