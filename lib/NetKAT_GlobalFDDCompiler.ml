@@ -411,10 +411,10 @@ module NetKAT_Automaton = struct
       let guard =
         if id = automaton.source then FDK.mk_id ()
         else FDK.atom (pc, Value.of_int id) ActionK.one ActionK.zero in
+      let e = NetKAT_LocalCompiler.seq e pop_pc in
       let fdk = FDK.seq guard (FDK.union e d) in
       let fdd = fdk_to_fdd fdk in
       NetKAT_LocalCompiler.union acc fdd)
-    |> (fun p -> NetKAT_LocalCompiler.seq p pop_pc)
 
 
   (* SJS: horrible hack *)
