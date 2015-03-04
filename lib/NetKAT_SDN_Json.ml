@@ -138,9 +138,4 @@ let flow_to_json (n : int) (f : flow) : json =
    ]
 
 let flowTable_to_json (t : flowTable) : json =
-  let l,_ =
-    List.fold_right t
-      ~f:(fun f (acc,i) -> (flow_to_json i f::acc, i - 1))
-      ~init:([],65535) in
-  `List l
-
+  `List (List.mapi t ~f:(fun i f -> (flow_to_json (65535 - i) f)))

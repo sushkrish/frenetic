@@ -1,3 +1,3 @@
-package org.freneticlang.netkat;
+package spn.netkat;
 
 public interface Policy { }

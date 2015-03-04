@@ -1,4 +1,4 @@
-package org.freneticlang.netkat;
+package spn.netkat;
 
 public class Modification implements Policy {
     private String field, value;
@@ -9,6 +9,6 @@ public class Modification implements Policy {
     }
 
     public String toString() {
-        return "{ type : mod, header : " + field + ", " + "value : " + value + "}"; 
+        return "{ \"type\" : \"mod\", \"header\" : \"" + field + "\", \"value\" : \"" + value + "\" }";
     }
 }

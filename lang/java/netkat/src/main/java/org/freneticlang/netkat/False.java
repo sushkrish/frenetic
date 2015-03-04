@@ -1,10 +1,10 @@
-package org.freneticlang.netkat;
+package spn.netkat;
 
 public class False implements Predicate {
 
     public False() { }
 
     public String toString() {
-        return "{ type : false }";
+        return "{ \"type\" : \"false\" }";
     }
 }

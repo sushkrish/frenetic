@@ -1,4 +1,4 @@
-package org.freneticlang.netkat;
+package spn.netkat;
 
 public class Test implements Predicate {
     private String field, value;
@@ -9,6 +9,6 @@ public class Test implements Predicate {
     }
 
     public String toString() {
-        return "{ type : test, header : " + field + ", value : " + value + " }";
+        return "{ \"type\" : \"test\", \"header\" : \"" + field + "\", \"value\" : \"" + value + "\" }";
     }
 }

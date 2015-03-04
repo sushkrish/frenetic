@@ -1,14 +1,26 @@
-package org.freneticlang.netkat;
+package spn.netkat;
+
+import java.util.List;
+import java.util.ArrayList;
 
 public class Sequence implements Policy {
-    private Policy left, right;
+    private List<Policy> pols = new ArrayList<Policy>();
 
-    public Sequence(Policy left, Policy right) {
-        this.left = left;
-        this.right = right;
+    public Sequence(Policy... pols) { 
+        for (int i=0; i < pols.length; i++) { 
+	    this.pols.add(pols[i]);
+	}
     }
 
     public String toString() {
-        return "{ type : seq, pols : [ " + left + ", " + right + "] }";
+        String result = "{ \"type\" : \"seq\", \"pols\" : [ ";
+	for (int i = 0; i < pols.size(); i++) { 
+	    if (i != 0) { 
+		result += ", ";
+	    }
+	    result += pols.get(i).toString();
+	}
+	result += "] }";
+	return result;
     }
 }
