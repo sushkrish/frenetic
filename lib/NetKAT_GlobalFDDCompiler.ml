@@ -405,13 +405,13 @@ module NetKAT_Automaton = struct
         (* SJS: using mk_branch here is safe since variable order of fdk and fdd agree *)
         (fun v t f -> NetKAT_FDD.T.mk_branch v t f)
     in
-    let pop_pc = NetKAT_FDD.T.const Action.(Par.singleton (Seq.singleton pc egress_pc)) in
+    let pop_pc = FDK.const ActionK.(Par.singleton (Seq.singleton (F pc) egress_pc)) in
     fold_reachable automaton ~init:(NetKAT_FDD.T.mk_drop ()) ~f:(fun acc id (e,d) ->
       let _ = assert (pc_unused pc e && pc_unused pc d) in
       let guard =
         if id = automaton.source then FDK.mk_id ()
         else FDK.atom (pc, Value.of_int id) ActionK.one ActionK.zero in
-      let e = NetKAT_LocalCompiler.seq e pop_pc in
+      let e = FDK.seq e pop_pc in
       let fdk = FDK.seq guard (FDK.union e d) in
       let fdd = fdk_to_fdd fdk in
       NetKAT_LocalCompiler.union acc fdd)
