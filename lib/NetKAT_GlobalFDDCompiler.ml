@@ -414,7 +414,7 @@ module NetKAT_Automaton = struct
       let fdk = FDK.seq guard (FDK.union e d) in
       let fdd = fdk_to_fdd fdk in
       NetKAT_LocalCompiler.union acc fdd)
-      |> NetKAT_LocalCompiler.seq pop_pc
+    |> (fun p -> NetKAT_LocalCompiler.seq p pop_pc)
 
 
   (* SJS: horrible hack *)
