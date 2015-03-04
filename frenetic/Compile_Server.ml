@@ -88,7 +88,9 @@ let handle_request
       printf "POST /update_vno %s" vnoId;
       let vnoId = Int.of_string vnoId in
       handle_parse_errors body parse_update_json (fun p ->
-        Array.set vno_pols (vnoId - 1) (virtualize p);
+        let p = virtualize p in
+        Array.set vno_pols (vnoId - 1) p;
+        printf "VNO%d policy set to:\n%s\n" vnoId (NetKAT_Pretty.string_of_policy p);
         Cohttp_async.Server.respond `OK)
     | `GET, [switchId; "flow_table"] ->
        let sw = Int64.of_string switchId in
@@ -109,6 +111,9 @@ let handle_request
        Cohttp_async.Server.respond `Not_found
 
 let listen ?(port=9000) =
+  NetKAT_FDD.Field.set_order
+   [ Switch; Location; VSwitch; VPort; IP4Dst; Vlan; TCPSrcPort; TCPDstPort; IP4Src;
+      EthType; EthDst; EthSrc; VlanPcp; IPProto ];
   ignore (Cohttp_async.Server.create (Tcp.on_port port) handle_request)
 
 let main (args : string list) : unit = match args with
