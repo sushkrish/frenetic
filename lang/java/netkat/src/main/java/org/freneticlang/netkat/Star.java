@@ -1,4 +1,4 @@
-package org.freneticlang.netkat;
+package spn.netkat;
 
 public class Star implements Policy {
     private Policy pol;
@@ -8,6 +8,6 @@ public class Star implements Policy {
     }
 
     public String toString() {
-        return "{ type : star, pol : " + pol + "}";
+        return "{ \"type\" : \"star\", \"pol\" : " + pol + " }";
     }
 }

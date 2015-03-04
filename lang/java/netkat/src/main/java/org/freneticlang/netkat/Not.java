@@ -1,4 +1,4 @@
-package org.freneticlang.netkat;
+package spn.netkat;
 
 public class Not implements Predicate {
     private Predicate pred;
@@ -8,6 +8,6 @@ public class Not implements Predicate {
     }
 
     public String toString() {
-        return " { type : neg, pred : " + pred + "}";
+        return " { \"type\" : \"neg\", \"pred\" : " + pred + " }";
     }
 }

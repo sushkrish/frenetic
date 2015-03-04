@@ -1,4 +1,4 @@
-package org.freneticlang.netkat;
+package spn.netkat;
 
 public class Filter implements Policy {
     private Predicate pred;
@@ -8,6 +8,6 @@ public class Filter implements Policy {
     }
 
     public String toString() {
-        return " { type : filter, pred : " + pred + " }";
+        return " { \"type\" : \"filter\", \"pred\" : " + pred + " }";
     }
 }
