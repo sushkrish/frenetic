@@ -88,7 +88,7 @@ let handle_request
       printf "POST /update_vno %s" vnoId;
       let vnoId = Int.of_string vnoId in
       handle_parse_errors body parse_update_json (fun p ->
-        Array.set vno_pols vnoId (virtualize p);
+        Array.set vno_pols (vnoId - 1) (virtualize p);
         Cohttp_async.Server.respond `OK)
     | `GET, [switchId; "flow_table"] ->
        let sw = Int64.of_string switchId in
