@@ -109,6 +109,9 @@ let handle_request
        Cohttp_async.Server.respond `Not_found
 
 let listen ?(port=9000) =
+  NetKAT_FDD.Field.set_order
+   [ Switch; Location; VSwitch; VPort; IP4Dst; Vlan; TCPSrcPort; TCPDstPort; IP4Src;
+      EthType; EthDst; EthSrc; VlanPcp; IPProto ];
   ignore (Cohttp_async.Server.create (Tcp.on_port port) handle_request)
 
 let main (args : string list) : unit = match args with
