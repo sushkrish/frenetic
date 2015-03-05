@@ -11,6 +11,8 @@ let vno_pols = Array.of_list [NetKAT_Types.drop; NetKAT_Types.drop]
 
 let rec virtualize_pred pred =
   match pred with
+  | True -> True
+  | False -> False
   | Test (Switch sw) -> Test (VSwitch sw)
   | Test (Location (Physical pt)) -> Test (VPort (Int64.of_int32 pt))
   | Test hv -> Test hv
