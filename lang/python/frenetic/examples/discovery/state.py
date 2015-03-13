@@ -14,8 +14,8 @@ class State(object):
     for sw in sws:
       internal_ports = set(edge[2]["label"]
                            for edge in self.network.out_edges(sw, data=True)
-                           if "switch_ref" in self.network.node[edge[1]])
-      all_ports = set(sws[sw].ports)
+                           if "switch_id" in self.network.node[edge[1]])
+      all_ports = set(sws[sw][1])
       external_ports = all_ports - internal_ports
       for port in external_ports:
         edge.add((sw, port))
@@ -26,9 +26,9 @@ class State(object):
     self.mode = mode
 
   def switches(self):
-    return dict([ (x, self.network.node[x]["switch_ref"])
+    return dict([ (x, (self.network.node[x]["switch_id"], self.network.node[x]["ports"]))
                   for x in self.network.nodes()
-                  if "switch_ref" in self.network.node[x] ])
+                  if "switch_id" in self.network.node[x] ])
 
   # NOTE(arjun): switches and nodes are a little hacky. I'm relying on hosts
   # being represented as strings (i.e., mac-addresses with colon-seperated
@@ -50,10 +50,10 @@ class State(object):
     if force_notify:
       self.notify()
 
-  def add_switch(self, switch_ref, force_notify=False):
-    if switch_ref in self.network.nodes_iter():
+  def add_switch(self, switch_id, ports, force_notify=False):
+    if switch_id in self.network.nodes_iter():
       return
-    self.network.add_node(switch_ref.id, switch_ref=switch_ref)
+    self.network.add_node(switch_id, switch_id=switch_id, ports=ports)
     self._clean = False
     self.__cleanup(force_notify)
 

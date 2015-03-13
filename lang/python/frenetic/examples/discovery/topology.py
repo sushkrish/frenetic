@@ -6,7 +6,6 @@ from state import *
 from tornado.ioloop import PeriodicCallback
 from tornado.ioloop import IOLoop
 from tornado.concurrent import return_future
-from flood_switch import *
 from probe import ProbeData
 
 weight_check_interval = 5000
@@ -152,8 +151,8 @@ class Topology(frenetic.App):
   def run_probe(self):
     to_remove = set()
     for switch in self.state.switches().values():
-      switch_id = switch.id
-      for port_id in switch.ports:
+      switch_id = switch[0]
+      for port_id in switch[1]:
         probe_data = ProbeData(switch_id, port_id)
 
         # Build a PROBOCOL packet and send it out
@@ -181,8 +180,7 @@ class Topology(frenetic.App):
     # When a switch comes up, add it to the network and create
     # probes for each of its ports
     print "switch_up(%s, %s)" % (switch_id, ports)
-    switch_ref = SwitchRef(switch_id, ports)
-    self.state.add_switch(switch_ref)
+    self.state.add_switch(switch_id, ports)
 
   def switch_down(self, switch_id):
     # When a switch goes down, remove any unresolved probes and remove
