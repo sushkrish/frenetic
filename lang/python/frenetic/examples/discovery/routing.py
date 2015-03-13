@@ -1,4 +1,4 @@
-import frenetic, networkx
+import frenetic, networkx, time
 from frenetic.syntax import *
 from flood_switch import *
 from state import *
@@ -12,6 +12,7 @@ class Routing(frenetic.App):
     self.version = version
     self.state = state
     self.state.register(self)
+    self.first_routing_timed = None
 
   def connected(self):
     self.update(drop)
@@ -33,9 +34,14 @@ class Routing(frenetic.App):
     pass
 
   def run_update(self):
-    print self.state.network.edges(data=True)
+    if (self.first_routing_timed != None and
+        self.first_routing_timed + 15 < time.time()):
+      print "Bro, I am not going to calculate that again even"
+      return
     # This function is invoked by State when the network changes
     self.update(self.policy())
+    if self.first_routing_timed == None:
+      self.first_routing_timed = time.time()
 
   def build_path(self, switch_path, curr_switch, acc):
     # When there are no more switches to go through, we've
