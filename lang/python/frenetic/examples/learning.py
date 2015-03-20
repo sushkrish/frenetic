@@ -1,7 +1,9 @@
 from ryu.lib.packet import packet
 import base64
-from netkat import webkat
-from netkat.syntax import *
+import sys
+print sys.path
+import frenetic
+from frenetic.syntax import *
 
 """Ethernet Learning switch"""
 
@@ -54,25 +56,26 @@ def switch_policy(sw):
 def policy():
     return union(switch_policy(sw) for sw in topo.keys())
 
-class LearningApp(webkat.App):
+class LearningApp(frenetic.App):
+    client_id = "learning"
     def switch_up(self,switch_id):
         topo[switch_id] = []
         table[switch_id] = {}
-        webkat.update(policy())
+        self.update(policy())
     def switch_down(self,switch_id):
         del topo[switch_id]
         del table[switch_id]
-        webkat.update(policy())
+        self.update(policy())
     def port_up(self,switch_id, port_id):
         topo[switch_id].append(port_id)
-        webkat.update(policy())
+        self.update(policy())
     def port_down(self,switch_id, port_id):
         topo[switch_id].remove(port_id)
-        webkat.update(policy())
+        self.update(policy())
     def packet_in(self,switch_id, port_id, packet):
         learn(switch_id,packet,port_id)
-        webkat.update(policy())
+        self.update(policy())
 
 if __name__ == '__main__':
-    LearningApp().start()
-    webkat.start()
+    app = LearningApp()
+    app.start_event_loop()

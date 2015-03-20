@@ -3,9 +3,11 @@
 import frenetic
 from frenetic.syntax import *
 
-class MyApp(frenetic.App):
+class RepeaterApp(frenetic.App):
+    client_id = "repeater"
 
     def __init__(self):
+        print "----Welcome to Repeater----"
         frenetic.App.__init__(self)
         self.topo = {}
 
@@ -23,20 +25,23 @@ class MyApp(frenetic.App):
         return Filter(Test(Location(Physical(in_port)))) >> p
 
     def switch_up(self,switch_id,ports):
+        print "Repeater Switch Up: %s" % ports
         self.topo[switch_id] = ports
-        app.update(self.policy())
+        self.update(self.policy())
 
     def switch_down(self,switch_id):
         del self.topo[switch_id]
-        app.update(self.policy())
+        self.update(self.policy())
 
     def port_up(self,switch_id, port_id):
-        self.topo[switch_id].append(port_id)
-        app.update(self.policy())
+        pass
 
     def port_down(self,switch_id, port_id):
-        self.topo[switch_id].remove(port_id)
-        app.update(self.policy())
+        pass
 
-app = MyApp()
-app.start_event_loop()
+    def packet_in(self,switch_id, port_id, payload):
+        pass
+
+if __name__ == '__main__':
+    app = RepeaterApp()
+    RepeaterApp.start_event_loop()
