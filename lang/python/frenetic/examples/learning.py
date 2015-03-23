@@ -22,7 +22,7 @@ def get_ethernet(pkt):
             return p
 
 def output(pt):
-    return modify("port", pt)
+    return Mododify("port", pt)
 
 def controller():
     return modify("port", "http")

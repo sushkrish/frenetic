@@ -73,6 +73,7 @@ def signature(node):
 
 
 known_pred = false
+
 def time_window():
     """ keeps edges from the past 30 days"""
     edges = list(conns.edges_iter(data = True))
@@ -80,7 +81,6 @@ def time_window():
         if get_time() - e[2]['weight'] >= 2592000: 
             conns.remove_edge(e[0], e[1])
     
-
 def monitor(packet):
     global known_pred
     p1 = get_tcp(packet)
