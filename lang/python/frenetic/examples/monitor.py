@@ -8,7 +8,7 @@ import repeater
 import time
 from operator import itemgetter
 import matplotlib.pyplot as plt
-import pickle
+import dill
 
 """Ethernet Learning switch"""
 
@@ -29,7 +29,7 @@ def get_ip(pkt):
 
 def get_time():
     """ returns the number of seconds since Epoch"""
-    return int (time.time())
+    return int(time.time())
 
 def controller():
     return Mod(Location(Pipe("monitor")))
@@ -37,28 +37,31 @@ def controller():
 def unexpected_talkers_w(node):
     """returns a list of tuples (j, w value) where w value is the edge weight from 
        (node, j) divided by j's in-degree"""
+    global conns
     values = []
     out_edges = conns.out_edges([node],data=True )
     for e in out_edges:
         num_incoming = conns.in_degree([e[2]])
-        values.append((e[2],conns[node][e[2]]["weight"]/num_incoming))
+        values.append((e[2],conns[node][e[2]]['weight']/num_incoming))
     return values
 
 def top_talkers_w(node):    
     """returns a list of tuples (j, w value) where w value is the edge weight from (node, j)"""
+    global conns
     values = [] 
     out_edges = conns.out_edges([node],data=True )
     for e in out_edges:
-        values.append((e[2],conns[node][e[2]]["weight"]))
+        values.append((e[2],conns[node][e[2]]['weight']))
     return values
     
         
 def signature(node):
     """creates a signature for a given host using the top talkers w function"""
+    global conns
     sig = nx.Graph()
-    k = 10
+    k = 4
     w_values = top_talkers_w(node)
-    if len(w_values) < 10:
+    if len(w_values) < 4:
         for n,w in w_values:
             sig.add_node(n, device = "host")
     else:
@@ -66,6 +69,11 @@ def signature(node):
            node = max(w_values, key=itemgetter(1))[0]
            sig.add_node(node, device = "host")
            k -= 1
+
+    fd = open("sig.txt", "w")
+    dill.dump(sig, fd)
+    fd.close()
+
 
 ##
 # Learning switch functions
@@ -76,6 +84,7 @@ known_pred = false
 
 def time_window():
     """ keeps edges from the past 30 days"""
+    global conns
     edges = list(conns.edges_iter(data = True))
     for e in edges:
         if get_time() - e[2]['weight'] >= 2592000: 
@@ -92,19 +101,23 @@ def monitor(packet):
     ipSrc = p2.src
     ipDst = p2.dst
     print "[monitor] %s:%d => %s:%d" % (ipSrc,tcpSrc,ipDst,tcpDst)
-    conns.add_node(ipSrc, device = 'host')
-    conns.add_node(ipDst, device = 'host')
+    #conns.add_node(ipSrc, device = 'host')
+    #conns.add_node(ipDst, device = 'host')
     if conns.has_edge(ipSrc, ipDst):
+        print "SAME EDGE %s to %s" % (ipSrc, ipDst)
         conns.edge[ipSrc][ipDst]['weight']+=1
-        conns.edge[ipSrc][ipDst][time] = get_time()        
+        conns.edge[ipSrc][ipDst]["time"] = get_time()        
     else: 
+        print "Adding new edge from %s to %s" % (ipSrc, ipDst)
         conns.add_edge(ipSrc, ipDst, src = tcpSrc, dst = tcpDst, weight = 1, time = get_time())
     host_pred = Test(Location(Pipe("ipSrc"))) & Test(Location(Pipe("ipDst"))) & Test(Location(Pipe("tcpSrc"))) & Test(Location(Pipe("tcpDst")))
     known_pred = known_pred | host_pred
-    print "CONNS: {%s}" % conns.edges()
+    print "CONNS NODES: %s" % conns.nodes()
+    print "CONNS EDGES: %s" % conns.edges()
     fd = open("conns.txt", "w")
-    pickle.dump(conns, fd)
+    dill.dump(conns, fd)
     fd.close()
+    signature("10.0.0.4")
     
 def policy():
     return Filter(~known_pred) >> controller()
@@ -116,7 +129,6 @@ class MonitorApp(frenetic.App):
         ryu_pkt = packet.Packet(array.array('b', payload.data))
         monitor(ryu_pkt)
         self.update(policy())
-        time_window()
 
 if __name__ == '__main__':
     print "---WELCOME TO MONITOR---"
@@ -124,3 +136,7 @@ if __name__ == '__main__':
     app = MonitorApp()
     app.update(policy())
     app.start_event_loop()
+
+
+
+

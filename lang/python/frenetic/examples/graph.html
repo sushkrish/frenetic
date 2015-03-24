@@ -1,0 +1,165 @@
+<html>
+<head>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+<style>
+body { font-family: "Open Sans"; }
+</style>
+</head>
+<body>
+<div id="network"></div>
+<div id="sig"></div>
+<script>
+
+var width = 600;
+var height = 600;
+
+
+
+
+var svg1 = d3.select("#network")
+			.append("svg")
+			.attr("height", height)
+			.attr("width", width)
+			.style("border", "solid black 1px");
+
+color = d3.scale.category20();
+
+d3.json("conns.json", function(error, data) {
+	json = data
+	var force = d3.layout.force()
+		.charge(-1000)
+	    .linkDistance(70)   
+	    .size([width, height]);
+
+    force
+        .nodes(json.nodes)
+        .links(json.links)
+        .start();
+
+    var links = svg1.selectAll(".line")
+        .data(force.links())
+        .enter()
+        .append("line")
+        .attr("class", "link")
+        .style("stroke-width", "2px")
+        .style("stroke", "darkgrey")
+        .style("stroke-width", function(d){
+        	return d.weight/10;
+        })
+        .attr("marker-end", "url(#arrow)");
+
+    var nodes = svg1.selectAll(".node")
+        .data(force.nodes())
+        .enter()
+        .append("circle")
+        .attr("r", 8)
+ 		.style("fill", function(d){
+ 			return color(d.weight);
+ 		})
+        .attr("class", "node")
+        .call(force.drag);  		
+       
+    var texts = 
+    	svg1.selectAll("text.label")
+        .data(force.nodes())
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("stroke", "black")
+        .style("font-size", "10px")
+        .text(function(d) {  
+        	return d.name;  
+        });
+
+    force.on("tick", function() {
+        links.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+
+        nodes.attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; });
+
+        texts.attr("transform", function(d) {
+        	return "translate(" + (d.x -10) + "," + (d.y +17) + ")";
+   		 });
+    });
+
+});
+
+
+var svg2 = d3.select("#sig")
+			.append("svg")
+			.attr("height", height)
+			.attr("width", width)
+			.style("border", "solid black 1px");
+
+d3.json("sig.json", function(error, data) {
+	json = data
+	var force = d3.layout.force()
+		.charge(-1000)
+	    .linkDistance(130)   
+	    .size([width, height]);
+
+    force
+        .nodes(json.nodes)
+        .links(json.links)
+        .start();
+
+    var links = svg2.selectAll(".line")
+        .data(force.links())
+        .enter()
+        .append("line")
+        .attr("class", "link")
+        .style("stroke-width", "2px")
+        .style("stroke", "darkgrey")
+        .style("stroke-width", function(d){
+        	return d.weight/10;
+        })
+        .attr("marker-end", "url(#arrow)");
+
+    var nodes = svg2.selectAll(".node")
+        .data(force.nodes())
+        .enter()
+        .append("circle")
+        .attr("r", 8)
+ 		.style("fill", function(d){
+ 			return color(d.weight);
+ 		})
+        .attr("class", "node")
+        .call(force.drag);  		
+       
+    var texts = 
+    	svg2.selectAll("text.label")
+        .data(force.nodes())
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("stroke", "black")
+        .style("font-size", "10px")
+        .text(function(d) {  
+        	return d.name;  
+        });
+
+    force.on("tick", function() {
+        links.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+
+        nodes.attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; });
+
+        texts.attr("transform", function(d) {
+        	return "translate(" + (d.x -10) + "," + (d.y +17) + ")";
+   		 });
+    });
+
+});
+
+</script>
+
+
+</body>
+</html>

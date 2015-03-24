@@ -34,10 +34,12 @@ class RepeaterApp(frenetic.App):
         self.update(self.policy())
 
     def port_up(self,switch_id, port_id):
-        pass
+        self.topo[switch_id].append(port_id)
+        app.update(self.policy())
 
     def port_down(self,switch_id, port_id):
-        pass
+        self.topo[switch_id].remove(port_id)
+        app.update(self.policy())
 
     def packet_in(self,switch_id, port_id, payload):
         pass
