@@ -8,7 +8,11 @@ import repeater
 import time
 from operator import itemgetter
 import matplotlib.pyplot as plt
-import dill
+import json
+from networkx.readwrite import json_graph
+import tornado.web
+import tornado.ioloop
+
 
 """Ethernet Learning switch"""
 
@@ -41,8 +45,8 @@ def unexpected_talkers_w(node):
     values = []
     out_edges = conns.out_edges([node],data=True )
     for e in out_edges:
-        num_incoming = conns.in_degree([e[2]])
-        values.append((e[2],conns[node][e[2]]['weight']/num_incoming))
+        num_incoming = conns.in_degree([e[1]])
+        values.append((e[1],conns[node][e[1]]['weight']/num_incoming))
     return values
 
 def top_talkers_w(node):    
@@ -51,28 +55,31 @@ def top_talkers_w(node):
     values = [] 
     out_edges = conns.out_edges([node],data=True )
     for e in out_edges:
-        values.append((e[2],conns[node][e[2]]['weight']))
+        values.append((e[1],conns[node][e[1]]['weight']))
+    print "W VALUES: %s" %values
     return values
-    
-        
+  
+sig = nx.Graph()
+
 def signature(node):
     """creates a signature for a given host using the top talkers w function"""
     global conns
     sig = nx.Graph()
-    k = 4
+    k = 5
     w_values = top_talkers_w(node)
-    if len(w_values) < 4:
+    if len(w_values) < 5:
         for n,w in w_values:
+            print "ADDING NODE TO SIG %s" % n
             sig.add_node(n, device = "host")
     else:
         while k > 0:
            node = max(w_values, key=itemgetter(1))[0]
+           print "ADDING NODE TO SIG %s" % node
            sig.add_node(node, device = "host")
+           w_values.remove(max(w_values, key=itemgetter(1)))
            k -= 1
 
-    fd = open("sig.txt", "w")
-    dill.dump(sig, fd)
-    fd.close()
+    print "SIG NODES: %s" % sig.nodes()
 
 
 ##
@@ -114,9 +121,6 @@ def monitor(packet):
     known_pred = known_pred | host_pred
     print "CONNS NODES: %s" % conns.nodes()
     print "CONNS EDGES: %s" % conns.edges()
-    fd = open("conns.txt", "w")
-    dill.dump(conns, fd)
-    fd.close()
     signature("10.0.0.4")
     
 def policy():
@@ -130,9 +134,45 @@ class MonitorApp(frenetic.App):
         monitor(ryu_pkt)
         self.update(policy())
 
+##
+# Tornado Server
+##
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("graph.html")
+
+    def post():
+        pass
+
+class ConnsHandler(tornado.web.RequestHandler):
+    def get(self):
+        global conns
+        j = json.dumps(json_graph.node_link_data(conns))
+        self.write(j)
+
+    def post(self):
+        pass
+
+class SigHandler(tornado.web.RequestHandler):
+    def get(self):
+        global sig
+        j = json.dumps(json_graph.node_link_data(sig))
+        self.write(j)
+
+    def post(self):
+        pass
+
+app = tornado.web.Application([
+(r"/", MainHandler),
+(r"/conns.json", ConnsHandler),
+(r"/sig.json", SigHandler),
+])
+
 if __name__ == '__main__':
     print "---WELCOME TO MONITOR---"
     repeater = repeater.RepeaterApp()
+    app.listen(8888)
     app = MonitorApp()
     app.update(policy())
     app.start_event_loop()
